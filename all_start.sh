@@ -13,7 +13,7 @@ track_time() {
   "$cmd" "$@"
   local end_time=$(date +%s)
   local elapsed_time=$((end_time - start_time))
-  execution_times+=("Time taken for $cmd: ${elapsed_time} seconds")
+  execution_times+=("$cmd: ${elapsed_time} seconds")
 }
 
 # Function to track GPU memory usage
@@ -42,14 +42,14 @@ deactivate
 source /workspace/paddle_env/bin/activate
 cd /workspace/PaddleOCR
 track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected-text-dir /workspace/results/detected_text
-track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600
-track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600
+/workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600
+/workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600
 deactivate
 
 source /workspace/propainter_env/bin/activate
 cd /workspace/ProPainter
 track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames -m /workspace/results/frames-mask -o /workspace/results/propainted
-track_time /workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted
+/workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted
 track_time /workspace/AI_code/combine_videos.sh -p /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt
 deactivate
 
@@ -76,5 +76,3 @@ echo "All environments have been set up in $file_execution_time seconds."
 max_gpu_memory=$(sort -nr /workspace/gpu_memory.log | head -n 1)
 echo "Maximum GPU memory usage: ${max_gpu_memory} MiB"
 
-# Clean up
-rm /workspace/gpu_memory.log

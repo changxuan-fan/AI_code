@@ -58,9 +58,8 @@ setup_esrgan() {
   pip install --upgrade pip
   pip install basicsr facexlib gfpgan
   pip install -r requirements.txt
-  python setup.py develop
-  cp degradations.py /workspace/facefusion_env/lib/python3.10/site-packages/basicsr/data/degradations.py
-  deactivate
+  pip install -e .
+  cp degradations.py /workspace/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py
   cd /workspace
 }
 
