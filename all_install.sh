@@ -8,6 +8,7 @@ git clone https://github.com/changxuan-fan/ProPainter.git
 git clone https://github.com/changxuan-fan/Real-ESRGAN.git 
 git clone https://github.com/changxuan-fan/PaddleOCR
 
+
 # Initialize conda
 curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh -b -p /workspace/miniconda3

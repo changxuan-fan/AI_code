@@ -19,7 +19,7 @@ track_time() {
 # Function to track GPU memory usage
 track_gpu_memory() {
   while true; do
-    nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits >> gpu_memory.log
+    nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits >> /workspace/gpu_memory.log
     sleep 0.1
   done
 }
@@ -31,30 +31,31 @@ GPU_TRACK_PID=$!
 # Execute commands and track time
 
 chmod +x /workspace/AI_code/*
+mkdir -p results
 
 conda activate facefusion_env
 cd /workspace/facefusion
-track_time /workspace/AI_code/facefusion_batch.sh -i inputs -o results -f face_food_eating.webp
-track_time /workspace/AI_code/extract_frames.sh -i results -o /workspace/PaddleOCR/frames
+track_time /workspace/AI_code/facefusion_batch.sh  -f /workspace/facefusion/face_food_eating.webp -i /workspace/facefusion/inputs -o /workspace/results/swapped
+track_time /workspace/AI_code/extract_frames.sh -i /workspace/results/swapped -o /workspace/results/frames
 conda deactivate
 
 conda activate paddle_env
 cd /workspace/PaddleOCR
-track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir frames --parent-output-dir frames-mask --detected_text_dir detected_text
-track_time python /workspace/AI_code/split_dir.py --parent-dir frames --files-per-dir 600
-track_time python /workspace/AI_code/split_dir.py --parent-dir frames-mask --files-per-dir 600
+track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected_text_dir /workspace/results/detected_text
+track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames --files-per-dir 600
+track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames-mask --files-per-dir 600
 conda deactivate
 
 conda activate propainter_env
 cd /workspace/ProPainter
-track_time /workspace/AI_code/propainter_batch.sh -v /workspace/PaddleOCR/frames -m /workspace/PaddleOCR/frames-mask
-track_time /workspace/AI_code/extract_propainter.sh -i results -o results_extracted
-track_time /workspace/AI_code/combine_videos.sh -p results_extracted -o results_combined -t file_list.txt
+track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames  -m /workspace/results/frames-mask -o /workspace/results/propainted
+track_time /workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted
+track_time /workspace/AI_code/combine_videos.sh -p /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt
 conda deactivate
 
 conda activate esrgan_env
 cd /workspace/Real-ESRGAN
-track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/ProPainter/results_combined -o results
+track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/results_combined -o results /workspace/results/HD
 conda deactivate
 
 # Stop tracking GPU memory usage
@@ -76,5 +77,4 @@ max_gpu_memory=$(sort -nr gpu_memory.log | head -n 1)
 echo "Maximum GPU memory usage: ${max_gpu_memory} MiB"
 
 # Clean up
-cd /workspace
-rm gpu_memory.log
+rm /workspace/gpu_memory.log

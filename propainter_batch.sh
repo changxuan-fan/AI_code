@@ -2,27 +2,29 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -v <video_dir> -m <mask_dir>"
+    echo "Usage: $0 -v <video_dir> -m <mask_dir> -o <output_dir>"
     exit 1
 }
 
 # Parse command line options using getopts
-while getopts ":v:m:" opt; do
+while getopts ":v:m:o:" opt; do
     case $opt in
         v) video_dir="$OPTARG" ;;
         m) mask_dir="$OPTARG" ;;
+        o) output_dir="$OPTARG" ;;
         *) usage ;;
     esac
 done
 
 # Check if all required options are provided
-if [ -z "$video_dir" ] || [ -z "$mask_dir" ]; then
+if [ -z "$video_dir" ] || [ -z "$mask_dir" ] || [ -z "$output_dir" ]; then
     usage
 fi
 
 run_inference() {
     local VIDEO_DIR="$1"
     local MASK_DIR="$2"
+    local OUTPUT_DIR="$3"
 
     # Record the start time
     local start_time=$(date +%s)
@@ -36,8 +38,8 @@ run_inference() {
         local sub_dir=$2
         local mask_sub_dir=$3
         local video_name=$4
-        mkdir -p "results/$video_name"
-        CUDA_VISIBLE_DEVICES=$gpu_id python inference_propainter.py --video "$sub_dir" --mask "$mask_sub_dir" --output "results/$video_name" --subvideo_length 100 --save_fps 30
+        mkdir -p "$OUTPUT_DIR/$video_name"
+        CUDA_VISIBLE_DEVICES=$gpu_id python inference_propainter.py --video "$sub_dir" --mask "$mask_sub_dir" --output "$OUTPUT_DIR/$video_name" --subvideo_length 100 --save_fps 30
     }
 
     # Initialize an array to track GPU availability
@@ -100,4 +102,4 @@ run_inference() {
 }
 
 # Call the function with the provided directories
-run_inference "$video_dir" "$mask_dir"
+run_inference "$video_dir" "$mask_dir" "$output_dir"
