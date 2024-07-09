@@ -11,7 +11,7 @@ git clone https://github.com/changxuan-fan/PaddleOCR
 
 # Update package lists and install APT packages
 apt-get update -y
-apt-get install -y ffmpeg mesa-va-drivers libcublaslt11 libcublas11 libcufft10 cuda-cudart-11-8 libcudnn8 python3-venv python3-pip
+apt-get install -y ffmpeg mesa-va-drivers libcublaslt11 libcublas11 libcufft10 cuda-cudart-11-8 libcudnn8
 
 # Create virtual environments
 python3 -m venv /workspace/facefusion_env
