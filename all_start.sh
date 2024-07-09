@@ -30,29 +30,31 @@ GPU_TRACK_PID=$!
 
 # Execute commands and track time
 
+chmod +x /workspace/AI_code/*
+
 conda activate facefusion_env
 cd /workspace/facefusion
-track_time ./facefusion_batch.sh -i inputs -o results -f face_food_eating.webp
-track_time ./extract_frames.sh -i results -o /workspace/PaddleOCR/frames
+track_time /workspace/AI_code/facefusion_batch.sh -i inputs -o results -f face_food_eating.webp
+track_time /workspace/AI_code/extract_frames.sh -i results -o /workspace/PaddleOCR/frames
 conda deactivate
 
 conda activate paddle_env
 cd /workspace/PaddleOCR
-track_time ./paddle_batch.sh --parent-input-dir frames --parent-output-dir frames-mask --detected_text_dir detected_text
-track_time python split_dir.py --parent-dir frames --files-per-dir 600
-track_time python split_dir.py --parent-dir frames-mask --files-per-dir 600
+track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir frames --parent-output-dir frames-mask --detected_text_dir detected_text
+track_time python /workspace/AI_code/split_dir.py --parent-dir frames --files-per-dir 600
+track_time python /workspace/AI_code/split_dir.py --parent-dir frames-mask --files-per-dir 600
 conda deactivate
 
 conda activate propainter_env
 cd /workspace/ProPainter
-track_time ./propainter_batch.sh -v /workspace/PaddleOCR/frames -m /workspace/PaddleOCR/frames-mask
-track_time ./extract_propainter.sh -i results -o results_extracted
-track_time ./combine_videos.sh -p results_extracted -o results_combined -t file_list.txt
+track_time /workspace/AI_code/propainter_batch.sh -v /workspace/PaddleOCR/frames -m /workspace/PaddleOCR/frames-mask
+track_time /workspace/AI_code/extract_propainter.sh -i results -o results_extracted
+track_time /workspace/AI_code/combine_videos.sh -p results_extracted -o results_combined -t file_list.txt
 conda deactivate
 
 conda activate esrgan_env
 cd /workspace/Real-ESRGAN
-track_time ./esrgan_batch.sh -i /workspace/ProPainter/results_combined -o results
+track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/ProPainter/results_combined -o results
 conda deactivate
 
 # Stop tracking GPU memory usage

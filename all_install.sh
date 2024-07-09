@@ -43,8 +43,7 @@ setup_facefusion() {
   wget -P .assets/models https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx
   rm facefusion.ini
   mv facefusion_rename.ini facefusion.ini
-  chmod +x facefusion_batch.sh 
-  chmod +x extract_frames.sh
+
 
   sleep 120
   kill $bg_pid
@@ -57,9 +56,6 @@ setup_propainter() {
   cd /workspace/ProPainter
   conda activate propainter_env
   pip install -r requirements.txt
-  chmod +x propainter_batch.sh 
-  chmod +x extract_propainter.sh 
-  chmod +x combine_videos.sh 
 
   conda deactivate
   cd /workspace
@@ -74,7 +70,6 @@ setup_esrgan() {
   pip install basicsr facexlib gfpgan &
   pip install -r requirements.txt
   python setup.py develop
-  chmod +x esrgan_batch.sh 
   cp degradations.py /workspace/miniconda3/envs/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py
   conda deactivate
   cd /workspace
@@ -88,7 +83,6 @@ setup_paddleocr() {
   conda activate paddle_env
   pip install paddlepaddle-gpu==2.6.1 -f https://www.paddlepaddle.org.cn/whl/linux/cudnnin/stable.html --no-index --no-deps &
   pip install -r requirements.txt 
-  chmod +x paddle_batch.sh 
   conda deactivate
   cd /workspace
 }
