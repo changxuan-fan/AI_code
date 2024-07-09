@@ -44,8 +44,6 @@ setup_facefusion() {
   wget -P .assets/models https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx
   rm facefusion.ini
   mv facefusion_rename.ini facefusion.ini
-
-
   sleep 120
   kill $bg_pid
   conda deactivate
@@ -68,7 +66,7 @@ setup_esrgan() {
   conda init
   cd /workspace/Real-ESRGAN
   conda activate esrgan_env
-  pip install basicsr facexlib gfpgan &
+  pip install basicsr facexlib gfpgan 
   pip install -r requirements.txt
   python setup.py develop
   cp degradations.py /workspace/miniconda3/envs/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py

@@ -42,8 +42,8 @@ conda deactivate
 conda activate paddle_env
 cd /workspace/PaddleOCR
 track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected-text-dir /workspace/results/detected_text
-track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames --files-per-dir 600
-track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames-mask --files-per-dir 600
+track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600
+track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600
 conda deactivate
 
 conda activate propainter_env
@@ -73,7 +73,7 @@ file_execution_time=$((file_end_time - file_start_time))
 echo "All environments have been set up in $file_execution_time seconds."
 
 # Get the maximum GPU memory usage
-max_gpu_memory=$(sort -nr gpu_memory.log | head -n 1)
+max_gpu_memory=$(sort -nr /workspace/gpu_memory.log | head -n 1)
 echo "Maximum GPU memory usage: ${max_gpu_memory} MiB"
 
 # Clean up
