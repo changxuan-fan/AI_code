@@ -43,6 +43,7 @@ process_parent_folder() {
     for ((i = 0; i < num_gpus; i++)); do
         if [ -n "${gpu_commands[$i]}" ]; then
             eval "(${gpu_commands[$i]}) &"
+            sleep 1
         fi
     done
 
