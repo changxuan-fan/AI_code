@@ -31,7 +31,7 @@ GPU_TRACK_PID=$!
 # Execute commands and track time
 
 chmod +x /workspace/AI_code/*
-mkdir -p results
+mkdir -p /workspace/results
 
 conda activate facefusion_env
 cd /workspace/facefusion
@@ -41,7 +41,7 @@ conda deactivate
 
 conda activate paddle_env
 cd /workspace/PaddleOCR
-track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected_text_dir /workspace/results/detected_text
+track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected-text-dir /workspace/results/detected_text
 track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames --files-per-dir 600
 track_time python /workspace/AI_code/split_dir.py --parent-dir /workspace/results/frames-mask --files-per-dir 600
 conda deactivate
@@ -55,7 +55,7 @@ conda deactivate
 
 conda activate esrgan_env
 cd /workspace/Real-ESRGAN
-track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/results_combined -o results /workspace/results/HD
+track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/propaint_combined -o results /workspace/results/HD
 conda deactivate
 
 # Stop tracking GPU memory usage

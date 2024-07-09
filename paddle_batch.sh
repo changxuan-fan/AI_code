@@ -13,40 +13,46 @@ process_parent_folder() {
     mkdir -p "$parent_output_dir"
     mkdir -p "$detected_text_dir"
 
-    # Array to store commands for each GPU
-    declare -a gpu_commands
-
     # Number of GPUs
     num_gpus=$(nvidia-smi -L | wc -l)
 
-    # Initialize commands for each GPU
+    # Array to track GPU availability
+    declare -a gpu_available
     for ((i = 0; i < num_gpus; i++)); do
-        gpu_commands[$i]=""
+        gpu_available[i]=1
     done
 
+    # Array to hold PIDs for background processes
+    declare -a gpu_pids
+
     # Loop through each child folder
-    child_index=0
     for child_folder_name in $(ls "$parent_input_dir"); do
         local child_input_dir="$parent_input_dir/$child_folder_name"
         local child_output_dir="$parent_output_dir/$child_folder_name"
         local child_text_file="$detected_text_dir/$child_folder_name.txt"
 
-
         if [[ -d "$child_input_dir" ]]; then
             echo "Processing child folder: $child_input_dir"
 
-            # Assign the command to the appropriate GPU
-            gpu_index=$((child_index % num_gpus))
-            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python process_images.py \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\"; "
+            while : ; do
+                for ((i = 0; i < num_gpus; i++)); do
+                    if [[ ${gpu_available[i]} -eq 1 ]]; then
+                        gpu_available[i]=0
+                        CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file" &
+                        gpu_pids[i]=$!
+                        sleep 1
+                        break 2
+                    fi
+                done
 
-            child_index=$((child_index + 1))
-        fi
-    done
-
-    # Execute the commands for each GPU
-    for ((i = 0; i < num_gpus; i++)); do
-        if [ -n "${gpu_commands[$i]}" ]; then
-            eval "(${gpu_commands[$i]}) &"
+                # Check if any GPU has finished its task
+                for ((i = 0; i < num_gpus; i++)); do
+                    if [[ -n "${gpu_pids[i]}" && ! -e /proc/${gpu_pids[i]} ]]; then
+                        gpu_available[i]=1
+                    fi
+                done
+                sleep 1
+            done
         fi
     done
 
@@ -65,7 +71,7 @@ main() {
                 parent_output_dir="$2"
                 shift 2
                 ;;
-            --detected_text_dir)
+            --detected-text-dir)
                 detected_text_dir="$2"
                 shift 2
                 ;;

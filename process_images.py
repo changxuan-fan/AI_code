@@ -46,13 +46,15 @@ def process_images(child_input_dir, child_output_dir, child_text_file):
         file.write("\n".join(all_text))
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python process_images.py <input_dir> <output_dir>")
+    if len(sys.argv) != 4:
+        print(sys.argv)
+        print("Usage: python process_images.py <input_dir> <output_dir> <child_text_file>")
         sys.exit(1)
 
     child_input_dir = sys.argv[1]
     child_output_dir = sys.argv[2]
-    process_images(child_input_dir, child_output_dir)
+    child_text_file = sys.argv[3]
+    process_images(child_input_dir, child_output_dir, child_text_file)
 
 if __name__ == "__main__":
     logging.getLogger('ppocr').setLevel(logging.ERROR)

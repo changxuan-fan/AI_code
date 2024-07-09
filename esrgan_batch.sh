@@ -41,7 +41,7 @@ run_processing() {
         local gpu_id=$1
         local video=$2
         local output_video=$3
-        CUDA_VISIBLE_DEVICES=$gpu_id python inference_realesrgan_video.py -i "$video" -o "$output_video" --suffix HD -n RealESRGAN_x4plus --num_process_per_gpu 2
+        CUDA_VISIBLE_DEVICES=$gpu_id python inference_realesrgan_video.py -i "$video" -o "$output_video" --suffix HD -n RealESRGAN_x4plus
     }
 
     # Initialize an array to track GPU availability
