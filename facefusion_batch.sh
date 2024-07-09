@@ -38,49 +38,31 @@ run_processing() {
     # Get the list of MP4 files in the input folder
     local video_files=("$input_folder"/*.mp4)
 
-    # Function to run a command on a specific GPU
-    run_command() {
-        local gpu_id=$1
-        local video=$2
-        local output_video=$3
-        CUDA_VISIBLE_DEVICES=$gpu_id python run.py -t "$video" -s "$face_img" -o "$output_video" --face-mask-types region --face-mask-blur 0.8 --face-mask-regions skin
-    }
+    # Array to store commands for each GPU
+    declare -a gpu_commands
 
-    # Initialize an array to track GPU availability
-    declare -a gpu_available
-    for ((i=0; i<NUM_GPUS; i++)); do
-        gpu_available[i]=1
+    # Initialize commands for each GPU
+    for ((i = 0; i < NUM_GPUS; i++)); do
+        gpu_commands[$i]=""
     done
 
-    # Initialize an array to hold PIDs for background processes
-    declare -a gpu_pids
-
-    # Process each video file
-    for video in "${video_files[@]}"; do
+    # Assign commands to GPUs
+    for ((i = 0; i < ${#video_files[@]}; i++)); do
+        local gpu_index=$((i % NUM_GPUS))
+        local video="${video_files[$i]}"
         local video_filename=$(basename "$video")
         local output_video="$output_folder/$video_filename"
-
-        while : ; do
-            for ((i=0; i<NUM_GPUS; i++)); do
-                if [[ ${gpu_available[i]} -eq 1 ]]; then
-                    gpu_available[i]=0
-                    run_command $i "$video" "$output_video" &
-                    gpu_pids[i]=$!
-                    sleep 1
-                    break 2
-                fi
-            done
-            # Check if any GPU has finished its task
-            for ((i=0; i<NUM_GPUS; i++)); do
-                if [[ -n "${gpu_pids[i]}" && ! -e /proc/${gpu_pids[i]} ]]; then
-                    gpu_available[i]=1
-                fi
-            done
-            sleep 1
-        done
+        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python run.py -t \"$video\" -s \"$face_img\" -o \"$output_video\" --face-mask-types region --face-mask-blur 0.8 --face-mask-regions skin; "
     done
 
-    # Wait for all background processes to complete
+    # Execute the commands for each GPU in parallel
+    for ((i = 0; i < NUM_GPUS; i++)); do
+        if [ -n "${gpu_commands[$i]}" ]; then
+            eval "(${gpu_commands[$i]}) &"
+        fi
+    done
+
+    # Wait for all background processes to finish
     wait
 
     # Display the total execution time in a human-readable format

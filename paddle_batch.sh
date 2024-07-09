@@ -16,14 +16,13 @@ process_parent_folder() {
     # Number of GPUs
     num_gpus=$(nvidia-smi -L | wc -l)
 
-    # Array to track GPU availability
-    declare -a gpu_available
-    for ((i = 0; i < num_gpus; i++)); do
-        gpu_available[i]=1
-    done
+    # Array to store commands for each GPU
+    declare -a gpu_commands
 
-    # Array to hold PIDs for background processes
-    declare -a gpu_pids
+    # Initialize commands for each GPU
+    for ((i = 0; i < num_gpus; i++)); do
+        gpu_commands[$i]=""
+    done
 
     # Loop through each child folder
     for child_folder_name in $(ls "$parent_input_dir"); do
@@ -34,34 +33,17 @@ process_parent_folder() {
         if [[ -d "$child_input_dir" ]]; then
             echo "Processing child folder: $child_input_dir"
 
-            first_command_executed=false
-
-            while : ; do
-                for ((i = 0; i < num_gpus; i++)); do
-                    if [[ ${gpu_available[i]} -eq 1 ]]; then
-                        if [[ "$first_command_executed" == false ]]; then
-                            CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file"
-                            first_command_executed=true
-                        else
-                            gpu_available[i]=0
-                            CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file" &
-                            gpu_pids[i]=$!
-                            sleep 1
-                            break 2
-                        fi
-                    fi
-                done
-
-                # Check if any GPU has finished its task
-                for ((i = 0; i < num_gpus; i++)); do
-                    if [[ -n "${gpu_pids[i]}" && ! -e /proc/${gpu_pids[i]} ]]; then
-                        gpu_available[i]=1
-                    fi
-                done
-                sleep 0.1
-            done
+            # Assign commands to GPUs
+            gpu_index=$((child_folder_name % num_gpus))
+            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python /workspace/AI_code/process_images.py \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\"; "
         fi
+    done
 
+    # Execute the commands for each GPU in parallel
+    for ((i = 0; i < num_gpus; i++)); do
+        if [ -n "${gpu_commands[$i]}" ]; then
+            eval "(${gpu_commands[$i]}) &"
+        fi
     done
 
     # Wait for all background processes to finish
@@ -90,8 +72,8 @@ main() {
         esac
     done
 
-    if [[ -z $parent_input_dir || -z $parent_output_dir ]]; then
-        echo "Usage: $0 --parent-input-dir <input_dir> --parent-output-dir <output_dir>"
+    if [[ -z $parent_input_dir || -z $parent_output_dir || -z $detected_text_dir ]]; then
+        echo "Usage: $0 --parent-input-dir <input_dir> --parent-output-dir <output_dir> --detected-text-dir <text_dir>"
         exit 1
     fi
 

@@ -32,24 +32,13 @@ run_inference() {
     # Get the number of available GPUs
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 
-    # Function to run a command on a specific GPU
-    run_command() {
-        local gpu_id=$1
-        local sub_dir=$2
-        local mask_sub_dir=$3
-        local video_name=$4
-        mkdir -p "$OUTPUT_DIR/$video_name"
-        CUDA_VISIBLE_DEVICES=$gpu_id python inference_propainter.py --video "$sub_dir" --mask "$mask_sub_dir" --output "$OUTPUT_DIR/$video_name" --subvideo_length 100 --save_fps 30
-    }
+    # Array to store commands for each GPU
+    declare -a gpu_commands
 
-    # Initialize an array to track GPU availability
-    declare -a gpu_available
-    for ((i=0; i<NUM_GPUS; i++)); do
-        gpu_available[i]=1
+    # Initialize commands for each GPU
+    for ((i = 0; i < NUM_GPUS; i++)); do
+        gpu_commands[$i]=""
     done
-
-    # Initialize an array to hold PIDs for background processes
-    declare -a gpu_pids
 
     # Iterate over each video directory (video1, video2, etc.)
     for video_dir in "$VIDEO_DIR"/*; do
@@ -65,28 +54,19 @@ run_inference() {
             local mask_sub_dir="$MASK_DIR/$video_name/$sub_dir_name"
 
             if [ -d "$mask_sub_dir" ]; then
-                while : ; do
-                    for ((i=0; i<NUM_GPUS; i++)); do
-                        if [[ ${gpu_available[i]} -eq 1 ]]; then
-                            gpu_available[i]=0
-                            run_command $i "$sub_dir" "$mask_sub_dir" "$video_name" &
-                            gpu_pids[i]=$!
-                            sleep 1
-                            break 2
-                        fi
-                    done
-                    # Check if any GPU has finished its task
-                    for ((i=0; i<NUM_GPUS; i++)); do
-                        if [[ -n "${gpu_pids[i]}" && ! -e /proc/"${gpu_pids[i]}" ]]; then
-                            gpu_available[i]=1
-                        fi
-                    done
-                    sleep 1
-                done
+                gpu_index=$((sub_dir_name % NUM_GPUS))
+                gpu_commands[$gpu_index]+="mkdir -p \"$OUTPUT_DIR/$video_name\"; CUDA_VISIBLE_DEVICES=$gpu_index python inference_propainter.py --video \"$sub_dir\" --mask \"$mask_sub_dir\" --output \"$OUTPUT_DIR/$video_name\" --subvideo_length 100 --save_fps 30; "
             else
                 echo "Mask directory $mask_sub_dir does not exist."
             fi
         done
+    done
+
+    # Execute the commands for each GPU in parallel
+    for ((i = 0; i < NUM_GPUS; i++)); do
+        if [ -n "${gpu_commands[$i]}" ]; then
+            eval "(${gpu_commands[$i]}) &"
+        fi
     done
 
     # Wait for all background processes to complete
