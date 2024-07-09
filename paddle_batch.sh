@@ -34,14 +34,21 @@ process_parent_folder() {
         if [[ -d "$child_input_dir" ]]; then
             echo "Processing child folder: $child_input_dir"
 
+            first_command_executed=false
+
             while : ; do
                 for ((i = 0; i < num_gpus; i++)); do
                     if [[ ${gpu_available[i]} -eq 1 ]]; then
-                        gpu_available[i]=0
-                        CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file" &
-                        gpu_pids[i]=$!
-                        sleep 1
-                        break 2
+                        if [[ "$first_command_executed" == false ]]; then
+                            CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file"
+                            first_command_executed=true
+                        else
+                            gpu_available[i]=0
+                            CUDA_VISIBLE_DEVICES=$i python /workspace/AI_code/process_images.py "$child_input_dir" "$child_output_dir" "$child_text_file" &
+                            gpu_pids[i]=$!
+                            sleep 1
+                            break 2
+                        fi
                     fi
                 done
 
@@ -51,9 +58,10 @@ process_parent_folder() {
                         gpu_available[i]=1
                     fi
                 done
-                sleep 1
+                sleep 0.1
             done
         fi
+
     done
 
     # Wait for all background processes to finish
