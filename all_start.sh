@@ -35,27 +35,27 @@ mkdir -p /workspace/results
 
 source /workspace/facefusion_env/bin/activate
 cd /workspace/facefusion
-track_time /workspace/AI_code/facefusion_batch.sh -f /workspace/facefusion/face_food_eating.webp -i /workspace/facefusion/inputs -o /workspace/results/swapped
-track_time /workspace/AI_code/extract_frames.sh -i /workspace/results/swapped -o /workspace/results/frames
+track_time /workspace/AI_code/facefusion_batch.sh -f /workspace/facefusion/face_food_eating.webp -i /workspace/facefusion/inputs -o /workspace/results/swapped -p 2
+track_time /workspace/AI_code/extract_frames.sh -i /workspace/results/swapped -o /workspace/results/frames -p 2
 deactivate
 
 source /workspace/paddle_env/bin/activate
 cd /workspace/PaddleOCR
-track_time /workspace/AI_code/paddle_batch.sh --parent-input-dir /workspace/results/frames --parent-output-dir /workspace/results/frames-mask --detected-text-dir /workspace/results/detected_text
+track_time /workspace/AI_code/paddle_batch.sh -i /workspace/results/frames -o /workspace/results/frames-mask -t /workspace/results/detected_text -p 2
 /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600
 /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600
 deactivate
 
 source /workspace/propainter_env/bin/activate
 cd /workspace/ProPainter
-track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames -m /workspace/results/frames-mask -o /workspace/results/propainted
+track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames -m /workspace/results/frames-mask -o /workspace/results/propainted -p 2
 /workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted
-track_time /workspace/AI_code/combine_videos.sh -p /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt
+track_time /workspace/AI_code/combine_videos.sh -i /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt -p 2
 deactivate
 
 source /workspace/esrgan_env/bin/activate
 cd /workspace/Real-ESRGAN
-track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/propaint_combined -o results /workspace/results/HD
+track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/propaint_combined -o results /workspace/results/HD -p 2
 deactivate
 
 # Stop tracking GPU memory usage

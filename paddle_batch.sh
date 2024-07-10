@@ -1,30 +1,50 @@
 #!/bin/bash
 
-process_parent_folder() {
-    local parent_input_dir=$1
-    local parent_output_dir=$2
-    local detected_text_dir=$3
+# Function to display usage information
+usage() {
+    echo "Usage: $0 --i <input_dir> --i <output_dir> --t <detected_text_dir> --p <GPU_PROCESS_NUM>"
+    exit 1
+}
 
-    if [[ ! -d "$parent_input_dir" ]]; then
-        echo "Parent input directory '$parent_input_dir' does not exist."
-        exit 1
-    fi
+# Parse command line options using getopts
+while getopts ":p:o:d:c:" opt; do
+    case $opt in
+        i) parent_input_dir="$OPTARG" ;;
+        o) parent_output_dir="$OPTARG" ;;
+        t) detected_text_dir="$OPTARG" ;;
+        p) GPU_PROCESS_NUM="$OPTARG" ;;
+        *) usage ;;
+    esac
+done
 
-    mkdir -p "$parent_output_dir"
-    mkdir -p "$detected_text_dir"
+# Check if all required options are provided
+if [[ -z $parent_input_dir || -z $parent_output_dir || -z $detected_text_dir || -z $GPU_PROCESS_NUM ]]; then
+    usage
+fi
 
-    # Number of GPUs
-    num_gpus=$(nvidia-smi -L | wc -l)
+# Ensure GPU_PROCESS_NUM is a number and greater than 0
+if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
+    echo "Error: The number of commands per GPU must be a positive number."
+    exit 1
+fi
 
-    # Array to store commands for each GPU
-    declare -a gpu_commands
+# Ensure output directories exist
+mkdir -p "$parent_output_dir"
+mkdir -p "$detected_text_dir"
+
+echo "Starting processing of images..."
+
+run_processing() {
+    local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 
     # Initialize commands for each GPU
-    for ((i = 0; i < num_gpus; i++)); do
+    declare -A gpu_commands
+    for ((i = 0; i < NUM_GPUS; i++)); do
         gpu_commands[$i]=""
     done
 
-    # Loop through each child folder
+    # Loop through each child folder in the parent input directory
+    local child_folder_index=0
     for child_folder_name in $(ls "$parent_input_dir"); do
         local child_input_dir="$parent_input_dir/$child_folder_name"
         local child_output_dir="$parent_output_dir/$child_folder_name"
@@ -33,52 +53,39 @@ process_parent_folder() {
         if [[ -d "$child_input_dir" ]]; then
             echo "Processing child folder: $child_input_dir"
 
-            # Assign commands to GPUs
-            gpu_index=$((child_folder_name % num_gpus))
-            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python /workspace/AI_code/process_images.py \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\"; "
+            local gpu_index=$((child_folder_index % NUM_GPUS))
+            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python /workspace/AI_code/process_images.py \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\";&"
+            child_folder_index=$((child_folder_index + 1))
         fi
     done
 
-    # Execute the commands for each GPU in parallel
-    for ((i = 0; i < num_gpus; i++)); do
-        if [ -n "${gpu_commands[$i]}" ]; then
-            eval "(${gpu_commands[$i]}) &"
-            sleep 1
-        fi
+    # Group the commands for each GPU
+    declare -A group_gpu_commands
+    for ((i = 0; i < NUM_GPUS; i++)); do
+        IFS='&' read -ra commands_array <<< "${gpu_commands[$i]}"
+        local total_commands=$(echo "${gpu_commands[$i]}" | tr -cd '&' | wc -c)
+        local num_commands_per_group=$(( (total_commands + GPU_PROCESS_NUM - 1) / GPU_PROCESS_NUM ))
+        group_gpu_commands[$i]=""
+        for ((j = 0; j < ${#commands_array[@]}; j += num_commands_per_group)); do
+            group_gpu_commands[$i]+="${commands_array[@]:j:num_commands_per_group} & "
+        done
+    done
+
+    # Execute the grouped commands in the desired order
+    for ((i = 0; i < GPU_PROCESS_NUM; i++)); do
+        for ((j = 0; j < NUM_GPUS; j++)); do
+            if [ -n "${group_gpu_commands[$j]}" ]; then
+                IFS='&' read -ra commands <<< "${group_gpu_commands[$j]}"
+                if [ -n "${commands[$i]}" ]; then
+                    eval "(${commands[$i]}) &"
+                    sleep 1
+                fi
+            fi
+        done
     done
 
     # Wait for all background processes to finish
     wait
 }
 
-main() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            --parent-input-dir)
-                parent_input_dir="$2"
-                shift 2
-                ;;
-            --parent-output-dir)
-                parent_output_dir="$2"
-                shift 2
-                ;;
-            --detected-text-dir)
-                detected_text_dir="$2"
-                shift 2
-                ;;
-            *)
-                echo "Unknown parameter passed: $1"
-                exit 1
-                ;;
-        esac
-    done
-
-    if [[ -z $parent_input_dir || -z $parent_output_dir || -z $detected_text_dir ]]; then
-        echo "Usage: $0 --parent-input-dir <input_dir> --parent-output-dir <output_dir> --detected-text-dir <text_dir>"
-        exit 1
-    fi
-
-    process_parent_folder "$parent_input_dir" "$parent_output_dir" "$detected_text_dir"
-}
-
-main "$@"
+run_processing
