@@ -2,12 +2,12 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 --i <input_dir> --i <output_dir> --t <detected_text_dir> --p <GPU_PROCESS_NUM>"
+    echo "Usage: $0 --i <input_dir> --o <output_dir> --t <detected_text_dir> --p <GPU_PROCESS_NUM>"
     exit 1
 }
 
 # Parse command line options using getopts
-while getopts ":p:o:d:c:" opt; do
+while getopts ":i:o:t:p:" opt; do
     case $opt in
         i) parent_input_dir="$OPTARG" ;;
         o) parent_output_dir="$OPTARG" ;;

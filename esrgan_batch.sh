@@ -7,7 +7,7 @@ usage() {
 }
 
 # Parse command line options using getopts
-while getopts ":i:o:c:" opt; do
+while getopts ":i:o:p:" opt; do
     case $opt in
         i) input_dir="$OPTARG" ;;
         o) output_dir="$OPTARG" ;;

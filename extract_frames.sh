@@ -7,11 +7,11 @@ usage() {
 }
 
 # Parse command line options using getopts
-while getopts ":i:o:c:" opt; do
+while getopts ":i:o:p:" opt; do
     case $opt in
         i) input_folder="$OPTARG" ;;
         o) output_folder="$OPTARG" ;;
-        i) GPU_PROCESS_NUM="$OPTARG" ;;
+        p) GPU_PROCESS_NUM="$OPTARG" ;;
         *) usage ;;
     esac
 done

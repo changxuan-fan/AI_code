@@ -2,12 +2,12 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -v <video_dir> -m <mask_dir> -o <output_dir> -c <GPU_PROCESS_NUM>"
+    echo "Usage: $0 -v <video_dir> -m <mask_dir> -o <output_dir> -p <GPU_PROCESS_NUM>"
     exit 1
 }
 
 # Parse command line options using getopts
-while getopts ":v:m:o:c:" opt; do
+while getopts ":v:m:o:p:" opt; do
     case $opt in
         v) video_dir="$OPTARG" ;;
         m) mask_dir="$OPTARG" ;;
