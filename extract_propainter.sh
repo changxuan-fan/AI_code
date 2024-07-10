@@ -68,7 +68,7 @@ process_input_dir() {
     for video_dir in "$INPUT_DIR"/*; do
         if [ -d "$video_dir" ]; then
             local process_index=$((video_dir_index % process_num))
-            process_commands[$process_index]+="move_and_rename_files \"$video_dir\" \"$OUTPUT_DIR\"; "
+            process_commands[$process_index]+="move_and_rename_files \"$video_dir\" \"$OUTPUT_DIR\";"
             video_dir_index=$((video_dir_index + 1))
         fi
     done

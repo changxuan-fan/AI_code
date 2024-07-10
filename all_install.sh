@@ -24,7 +24,7 @@ setup_facefusion() {
   source /workspace/env/facefusion_env/bin/activate
   cd /workspace/facefusion
   pip install --upgrade pip
-  pip install openvino==2023.1.0
+  pip install openvino==2023.1.0 &
   pip install -r requirements.txt
   python run.py &
   bg_pid=$!
@@ -56,7 +56,7 @@ setup_esrgan() {
   source /workspace/env/esrgan_env/bin/activate
   cd /workspace/Real-ESRGAN
   pip install --upgrade pip
-  pip install basicsr facexlib gfpgan
+  pip install basicsr facexlib gfpgan &
   pip install -r requirements.txt
   pip install -e .
   cp degradations.py /workspace/env/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py
@@ -68,8 +68,9 @@ setup_paddleocr() {
   source /workspace/env/paddle_env/bin/activate
   cd /workspace/PaddleOCR
   pip install --upgrade pip
-  pip install paddlepaddle-gpu==2.6.1
+  pip install paddlepaddle-gpu==2.6.1 &
   pip install -r requirements.txt
+  ln -s /usr/local/lib/python3.10/dist-packages/nvidia/cudnn/lib/libcudnn.so.8 /usr/lib/libcudnn.so
   deactivate
   cd /workspace
 }

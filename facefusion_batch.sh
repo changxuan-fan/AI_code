@@ -69,7 +69,7 @@ run_processing() {
         local num_commands_per_group=$(( (total_commands + GPU_PROCESS_NUM - 1) / GPU_PROCESS_NUM ))
         group_gpu_commands[$i]=""
         for ((j = 0; j < ${#commands_array[@]}; j += num_commands_per_group)); do
-            group_gpu_commands[$i]+="${commands_array[@]:j:num_commands_per_group} & "
+            group_gpu_commands[$i]+="${commands_array[@]:j:num_commands_per_group} &"
         done
     done
 
