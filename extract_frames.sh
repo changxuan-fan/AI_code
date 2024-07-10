@@ -2,22 +2,22 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -i <input_folder> -o <output_folder> -p <GPU_PROCESS_NUM>"
+    echo "Usage: $0 -i <INPUT_DIR> -o <OUTPUT_DIR> -p <GPU_PROCESS_NUM>"
     exit 1
 }
 
 # Parse command line options using getopts
 while getopts ":i:o:p:" opt; do
     case $opt in
-        i) input_folder="$OPTARG" ;;
-        o) output_folder="$OPTARG" ;;
+        i) INPUT_DIR="$OPTARG" ;;
+        o) OUTPUT_DIR="$OPTARG" ;;
         p) GPU_PROCESS_NUM="$OPTARG" ;;
         *) usage ;;
     esac
 done
 
 # Check if all required options are provided
-if [ -z "$input_folder" ] || [ -z "$output_folder" ] || [ -z "$GPU_PROCESS_NUM" ]; then
+if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$GPU_PROCESS_NUM" ]; then
     usage
 fi
 
@@ -28,12 +28,12 @@ if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
 fi
 
 # Ensure output directory exists and is empty
-if [ -d "$output_folder" ]; then
-    find "$output_folder" -mindepth 1 -print -delete  # Log what gets deleted
-    echo "Cleared all contents of $output_folder"
+if [ -d "$OUTPUT_DIR" ]; then
+    find "$OUTPUT_DIR" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $OUTPUT_DIR"
 else
-    mkdir -p "$output_folder"  # Create the directory if it doesn't exist
-    echo "Created directory $output_folder"
+    mkdir -p "$OUTPUT_DIR"  # Create the directory if it doesn't exist
+    echo "Created directory $OUTPUT_DIR"
 fi
 
 echo "Starting frame extraction from videos..."
@@ -47,14 +47,14 @@ run_extraction() {
         gpu_commands[$i]=""
     done
 
-    local video_files=("$input_folder"/*.mp4)
+    local video_files=("$INPUT_DIR"/*.mp4)
     for ((i = 0; i < ${#video_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local video="${video_files[$i]}"
         local base_name=$(basename "$video" .mp4)
-        local output_dir="$output_folder/$base_name"
+        local output_dir="$OUTPUT_DIR/$base_name"
         mkdir -p "$output_dir"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel cuda -i \"$video\" -vf scale=360:640 -qscale:v 1 \"$output_dir/frame_%04d.jpg\";&"
+        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel cuda -i \"$video\" -vf scale=360:640 -qscale:v 1 -hide_banner -loglevel error -stats \"$output_dir/frame_%04d.jpg\";&"
     done
 
     # Group the commands for each GPU
@@ -88,4 +88,4 @@ run_extraction() {
 
 run_extraction
 
-echo "All frames have been extracted and stored in $output_folder."
+echo "All frames have been extracted and stored in $OUTPUT_DIR."

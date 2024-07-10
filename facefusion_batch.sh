@@ -2,23 +2,23 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -f <face_img> -i <input_folder> -o <output_folder> -p <GPU_PROCESS_NUM>"
+    echo "Usage: $0 -f <FACE_IMG> -i <INPUT_DIR> -o <OUTPUT_DIR> -p <GPU_PROCESS_NUM>"
     exit 1
 }
 
 # Parse command line options using getopts
 while getopts ":i:o:f:p:" opt; do
     case $opt in
-        f) face_img="$OPTARG" ;;
-        i) input_folder="$OPTARG" ;;
-        o) output_folder="$OPTARG" ;;
+        f) FACE_IMG="$OPTARG" ;;
+        i) INPUT_DIR="$OPTARG" ;;
+        o) OUTPUT_DIR="$OPTARG" ;;
         p) GPU_PROCESS_NUM="$OPTARG" ;;
         *) usage ;;
     esac
 done
 
 # Check if all required options are provided
-if [ -z "$input_folder" ] || [ -z "$output_folder" ] || [ -z "$face_img" ] || [ -z "$GPU_PROCESS_NUM" ]; then
+if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$FACE_IMG" ] || [ -z "$GPU_PROCESS_NUM" ]; then
     usage
 fi
 
@@ -29,15 +29,15 @@ if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
 fi
 
 # Ensure output directory exists and is empty
-if [ -d "$output_folder" ]; then
-    find "$output_folder" -mindepth 1 -print -delete  # Log what gets deleted
-    echo "Cleared all contents of $output_folder"
+if [ -d "$OUTPUT_DIR" ]; then
+    find "$OUTPUT_DIR" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $OUTPUT_DIR"
 else
-    mkdir -p "$output_folder"  # Create the directory if it doesn't exist
-    echo "Created directory $output_folder"
+    mkdir -p "$OUTPUT_DIR"  # Create the directory if it doesn't exist
+    echo "Created directory $OUTPUT_DIR"
 fi
 
-echo "FaceFusion Processing"
+echo "FaceFusion Processing..."
 
 run_processing() {
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
@@ -50,13 +50,13 @@ run_processing() {
         gpu_commands[$i]=""
     done
 
-    local video_files=("$input_folder"/*.mp4)
+    local video_files=("$INPUT_DIR"/*.mp4)
     for ((i = 0; i < ${#video_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local video="${video_files[$i]}"
         local video_filename=$(basename "$video")
-        local output_video="$output_folder/$video_filename"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python run.py -t \"$video\" -s \"$face_img\" -o \"$output_video\" --face-mask-types region --face-mask-blur 0.8 --face-mask-regions skin;&"
+        local output_video="$OUTPUT_DIR/$video_filename"
+        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python run.py -t \"$video\" -s \"$FACE_IMG\" -o \"$output_video\" --face-mask-types region --face-mask-blur 0.8 --face-mask-regions skin;&"
     done
 
     # Group the commands for each GPU
@@ -82,7 +82,7 @@ run_processing() {
                 IFS='&' read -ra commands <<< "${group_gpu_commands[$j]}"
                 if [ -n "${commands[$i]}" ]; then
                     eval "(${commands[$i]}) &"
-                    sleep 1
+                    sleep 2
                 fi
             fi
         done

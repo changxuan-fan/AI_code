@@ -37,7 +37,7 @@ else
     echo "Created directory $OUTPUT_DIR"
 fi
 
-echo "Starting processing of videos..."
+echo "Combining Videos..."
 
 run_processing() {
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
@@ -50,7 +50,7 @@ run_processing() {
 
     # Loop through each subdirectory in the parent directory
     local subdir_index=0
-    for SUBDIR in "$PARENT_DIR"/*; do
+    for SUBDIR in "$INPUT_DIR"/*; do
         if [ -d "$SUBDIR" ]; then
             > "$TEMP_FILE"  # Clear the temporary file list
             # List all video files in the subdirectory
@@ -59,7 +59,7 @@ run_processing() {
             done
             local SUBDIR_NAME=$(basename "$SUBDIR")
             local gpu_index=$((subdir_index % NUM_GPUS))
-            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel nvdec -f concat -safe 0 -i \"$TEMP_FILE\" \"$OUTPUT_DIR/$SUBDIR_NAME.mp4\";&"
+            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel nvdec -f concat -safe 0 -i \"$TEMP_FILE\" -hide_banner -loglevel error -stats \"$OUTPUT_DIR/$SUBDIR_NAME.mp4\";&"
             subdir_index=$((subdir_index + 1))
         fi
     done

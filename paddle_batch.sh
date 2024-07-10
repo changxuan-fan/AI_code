@@ -32,7 +32,7 @@ fi
 mkdir -p "$parent_output_dir"
 mkdir -p "$detected_text_dir"
 
-echo "Starting processing of images..."
+echo "PaddleOCR Processing..."
 
 run_processing() {
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
@@ -77,8 +77,13 @@ run_processing() {
             if [ -n "${group_gpu_commands[$j]}" ]; then
                 IFS='&' read -ra commands <<< "${group_gpu_commands[$j]}"
                 if [ -n "${commands[$i]}" ]; then
-                    eval "(${commands[$i]}) &"
-                    sleep 1
+                    if [[ $i -eq 0 && $j -eq 0 ]]; then
+                        eval "(${commands[$i]}) &"
+                        sleep 30
+                    else
+                        eval "(${commands[$i]}) &"
+                        sleep 1
+                    fi
                 fi
             fi
         done

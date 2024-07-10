@@ -14,14 +14,14 @@ apt-get update -y
 apt-get install -y ffmpeg mesa-va-drivers libcublaslt11 libcublas11 libcufft10 cuda-cudart-11-8 libcudnn8
 
 # Create virtual environments
-python3 -m venv /workspace/facefusion_env
-python3 -m venv /workspace/propainter_env
-python3 -m venv /workspace/esrgan_env
-python3 -m venv /workspace/paddle_env
+python3 -m venv /workspace/env/facefusion_env
+python3 -m venv /workspace/env/propainter_env
+python3 -m venv /workspace/env/esrgan_env
+python3 -m venv /workspace/env/paddle_env
 
 # Function to set up FaceFusion environment
 setup_facefusion() {
-  source /workspace/facefusion_env/bin/activate
+  source /workspace/env/facefusion_env/bin/activate
   cd /workspace/facefusion
   pip install --upgrade pip
   pip install openvino==2023.1.0
@@ -43,7 +43,7 @@ setup_facefusion() {
 
 # Function to set up ProPainter environment
 setup_propainter() {
-  source /workspace/propainter_env/bin/activate
+  source /workspace/env/propainter_env/bin/activate
   cd /workspace/ProPainter
   pip install --upgrade pip
   pip install -r requirements.txt
@@ -53,22 +53,22 @@ setup_propainter() {
 
 # Function to set up Real-ESRGAN environment
 setup_esrgan() {
-  source /workspace/esrgan_env/bin/activate
+  source /workspace/env/esrgan_env/bin/activate
   cd /workspace/Real-ESRGAN
   pip install --upgrade pip
   pip install basicsr facexlib gfpgan
   pip install -r requirements.txt
   pip install -e .
-  cp degradations.py /workspace/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py
+  cp degradations.py /workspace/env/esrgan_env/lib/python3.10/site-packages/basicsr/data/degradations.py
   cd /workspace
 }
 
 # Function to set up PaddleOCR environment
 setup_paddleocr() {
-  source /workspace/paddle_env/bin/activate
+  source /workspace/env/paddle_env/bin/activate
   cd /workspace/PaddleOCR
   pip install --upgrade pip
-  pip install paddlepaddle-gpu==2.6.1 -f https://www.paddlepaddle.org.cn/whl/linux/cudnnin/stable.html --no-index --no-deps
+  pip install paddlepaddle-gpu==2.6.1
   pip install -r requirements.txt
   deactivate
   cd /workspace

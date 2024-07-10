@@ -2,23 +2,23 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -v <video_dir> -m <mask_dir> -o <output_dir> -p <GPU_PROCESS_NUM>"
+    echo "Usage: $0 -v <VIDEO_DIR> -m <MASK_DIR> -o <OUTPUT_DIR> -p <GPU_PROCESS_NUM>"
     exit 1
 }
 
 # Parse command line options using getopts
 while getopts ":v:m:o:p:" opt; do
     case $opt in
-        v) video_dir="$OPTARG" ;;
-        m) mask_dir="$OPTARG" ;;
-        o) output_dir="$OPTARG" ;;
+        v) VIDEO_DIR="$OPTARG" ;;
+        m) MASK_DIR="$OPTARG" ;;
+        o) OUTPUT_DIR="$OPTARG" ;;
         p) GPU_PROCESS_NUM="$OPTARG" ;;
         *) usage ;;
     esac
 done
 
 # Check if all required options are provided
-if [ -z "$video_dir" ] || [ -z "$mask_dir" ] || [ -z "$output_dir" ] || [ -z "$GPU_PROCESS_NUM" ]; then
+if [ -z "$VIDEO_DIR" ] || [ -z "$MASK_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$GPU_PROCESS_NUM" ]; then
     usage
 fi
 
@@ -27,6 +27,8 @@ if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
     echo "Error: The number of commands per GPU must be a positive number."
     exit 1
 fi
+
+echo "ProPainter Processing..."
 
 run_inference() {
     # Record the start time
@@ -92,14 +94,6 @@ run_inference() {
 
     # Wait for all background processes to complete
     wait
-
-    # Display the total execution time in a human-readable format
-    local end_time=$(date +%s)
-    local execution_time=$((end_time - start_time))
-    local hours=$((execution_time / 3600))
-    local minutes=$(( (execution_time % 3600) / 60 ))
-    local seconds=$((execution_time % 60))
-    echo "Total execution time: ${hours}h ${minutes}m ${seconds}s"
 }
 
 # Call the function with the provided directories

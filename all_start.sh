@@ -16,16 +16,17 @@ track_time() {
   execution_times+=("$cmd: ${elapsed_time} seconds")
 }
 
-# Function to track GPU memory usage
-track_gpu_memory() {
+# Function to track GPU memory usage and utilization
+track_gpu_metrics() {
+  > /workspace/gpu_metrics.log
   while true; do
-    nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits >> /workspace/gpu_memory.log
-    sleep 0.1
+    nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader,nounits >> /workspace/gpu_metrics.log
+    sleep 0.5
   done
 }
 
-# Start tracking GPU memory usage
-track_gpu_memory &
+# Start tracking GPU metrics
+track_gpu_metrics &
 GPU_TRACK_PID=$!
 
 # Execute commands and track time
@@ -42,23 +43,23 @@ deactivate
 source /workspace/paddle_env/bin/activate
 cd /workspace/PaddleOCR
 track_time /workspace/AI_code/paddle_batch.sh -i /workspace/results/frames -o /workspace/results/frames-mask -t /workspace/results/detected_text -p 2
-/workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600
-/workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600
+track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600 --process-num 2
+track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600 --process-num 2
 deactivate
 
 source /workspace/propainter_env/bin/activate
 cd /workspace/ProPainter
 track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames -m /workspace/results/frames-mask -o /workspace/results/propainted -p 2
-/workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted
+track_time /workspace/AI_code/extract_propainter.sh -input-dir /workspace/results/propainted -output-dir /workspace/results/propaint_extracted --process-num 2
 track_time /workspace/AI_code/combine_videos.sh -i /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt -p 2
 deactivate
 
 source /workspace/esrgan_env/bin/activate
 cd /workspace/Real-ESRGAN
-track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/propaint_combined -o results /workspace/results/HD -p 2
+track_time /workspace/AI_code/esrgan_batch.sh -i /workspace/results/propaint_combined -o /workspace/results/HD -p 2
 deactivate
 
-# Stop tracking GPU memory usage
+# Stop tracking GPU metrics
 kill $GPU_TRACK_PID
 
 # Print all execution times at the end
@@ -72,7 +73,8 @@ file_execution_time=$((file_end_time - file_start_time))
 
 echo "All environments have been set up in $file_execution_time seconds."
 
-# Get the maximum GPU memory usage
-max_gpu_memory=$(sort -nr /workspace/gpu_memory.log | head -n 1)
+# Get the maximum GPU memory usage and average GPU utilization
+max_gpu_memory=$(awk -F, '{print $1}' /workspace/gpu_metrics.log | sort -nr | head -n 1)
+avg_gpu_utilization=$(awk -F, '{sum+=$2; count++} END {print sum/count}' /workspace/gpu_metrics.log)
 echo "Maximum GPU memory usage: ${max_gpu_memory} MiB"
-
+echo "Average GPU utilization: ${avg_gpu_utilization} %"
