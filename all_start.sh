@@ -21,6 +21,7 @@ track_gpu_metrics() {
   > /workspace/gpu_metrics.log
   while true; do
     nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader,nounits >> /workspace/gpu_metrics.log
+    echo "" >> /workspace/gpu_metrics.log
     sleep 0.5
   done
 }
@@ -33,6 +34,8 @@ GPU_TRACK_PID=$!
 
 chmod +x /workspace/AI_code/*
 mkdir -p /workspace/results
+
+./separate_audio.sh -i /workspace/demucs/inputs -o /workspace/results -p 2
 
 source /workspace/env/facefusion_env/bin/activate
 cd /workspace/facefusion

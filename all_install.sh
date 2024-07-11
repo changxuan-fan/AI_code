@@ -7,7 +7,7 @@ git clone -b next https://github.com/changxuan-fan/facefusion.git
 git clone https://github.com/changxuan-fan/ProPainter.git 
 git clone https://github.com/changxuan-fan/Real-ESRGAN.git 
 git clone https://github.com/changxuan-fan/PaddleOCR
-
+git clone https://github.com/changxuan-fan/demucs
 
 # Update package lists and install APT packages
 apt-get update -y
@@ -18,6 +18,7 @@ python3 -m venv /workspace/env/facefusion_env
 python3 -m venv /workspace/env/propainter_env
 python3 -m venv /workspace/env/esrgan_env
 python3 -m venv /workspace/env/paddle_env
+python3 -m venv /workspace/env/demucs_env
 
 # Function to set up FaceFusion environment
 setup_facefusion() {
@@ -75,11 +76,25 @@ setup_paddleocr() {
   cd /workspace
 }
 
+# Function to set up PaddleOCR environment
+setup_demucs() {
+  source /workspace/env/demucs_env/bin/activate
+  cd /workspace/demucs
+  pip install --upgrade pip
+  pip install -U demucs
+  pip install -r requirements.txt
+  deactivate
+  cd /workspace
+}
+
+
+
 # Run all setups sequentially
 setup_facefusion &
 setup_propainter &
 setup_esrgan &
-setup_paddleocr
+setup_paddleocr &
+setup_demucs
 
 wait
 
