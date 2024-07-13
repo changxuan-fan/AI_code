@@ -27,8 +27,14 @@ if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
     exit 1
 fi
 
-# Ensure output directory exists
-mkdir -p "$OUTPUT_DIR"
+# Ensure output directory exists and is empty
+if [ -d "$OUTPUT_DIR" ]; then
+    find "$OUTPUT_DIR" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $OUTPUT_DIR"
+else
+    mkdir -p "$OUTPUT_DIR"  # Create the directory if it doesn't exist
+    echo "Created directory $OUTPUT_DIR"
+fi
 
 echo "Starting audio separation from files in $INPUT_DIR..."
 
@@ -43,11 +49,11 @@ run_separation() {
         gpu_commands[$i]=""
     done
 
-    local audio_files=("$INPUT_DIR"/*.mp3)
+    local audio_files=("$INPUT_DIR"/*.mp4 "$INPUT_DIR"/*.MP4)
     for ((i = 0; i < ${#audio_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local audio="${audio_files[$i]}"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index demucs --device cuda -jobs 4 --mp3 --filename "{track}/{track}_{stem}.{ext}" --out \"$OUTPUT_DIR\" \"$audio\";&"
+        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index demucs --device cuda --jobs 4 --mp3 --filename "{track}/{track}_{stem}.{ext}" --out \"$OUTPUT_DIR\" \"$audio\";&"
     done
 
     # Group the commands for each GPU

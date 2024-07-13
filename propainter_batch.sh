@@ -28,7 +28,21 @@ if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
     exit 1
 fi
 
+
+
+# Ensure output directory exists and is empty
+if [ -d "$OUTPUT_DIR" ]; then
+    find "$OUTPUT_DIR" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $OUTPUT_DIR"
+else
+    mkdir -p "$OUTPUT_DIR"  # Create the directory if it doesn't exist
+    echo "Created directory $OUTPUT_DIR"
+fi
+
+
 echo "ProPainter Processing..."
+
+
 
 run_inference() {
     # Record the start time

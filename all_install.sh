@@ -8,6 +8,7 @@ git clone https://github.com/changxuan-fan/ProPainter.git
 git clone https://github.com/changxuan-fan/Real-ESRGAN.git 
 git clone https://github.com/changxuan-fan/PaddleOCR
 git clone https://github.com/changxuan-fan/demucs
+git clone https://github.com/changxuan-fan/whisper-ctranslate2
 
 # Update package lists and install APT packages
 apt-get update -y
@@ -19,6 +20,8 @@ python3 -m venv /workspace/env/propainter_env
 python3 -m venv /workspace/env/esrgan_env
 python3 -m venv /workspace/env/paddle_env
 python3 -m venv /workspace/env/demucs_env
+python3 -m venv /workspace/env/whisper_env
+python3 -m venv /workspace/env/llama_env
 
 # Function to set up FaceFusion environment
 setup_facefusion() {
@@ -79,14 +82,31 @@ setup_paddleocr() {
 # Function to set up PaddleOCR environment
 setup_demucs() {
   source /workspace/env/demucs_env/bin/activate
-  cd /workspace/demucs
   pip install --upgrade pip
   pip install -U demucs
-  pip install -r requirements.txt
   deactivate
   cd /workspace
 }
 
+# Function to set up PaddleOCR environment
+setup_whisper() {
+  source /workspace/env/whisper_env/bin/activate
+  pip install --upgrade pip
+  pip install -U demucs
+  pip install pyannote.audio
+  deactivate
+  cd /workspace
+}
+
+# Function to set up PaddleOCR environment
+setup_llama() {
+  source /workspace/env/llama_env/bin/activate
+  cd /workspace/llama3
+  pip install --upgrade pip
+  pip install -e .
+  deactivate
+  cd /workspace
+}
 
 
 # Run all setups sequentially
@@ -94,7 +114,8 @@ setup_facefusion &
 setup_propainter &
 setup_esrgan &
 setup_paddleocr &
-setup_demucs
+setup_demucs &
+setup_llama
 
 wait
 

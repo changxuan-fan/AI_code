@@ -36,9 +36,10 @@ else
     echo "Created directory $OUTPUT_DIR"
 fi
 
-echo "Starting frame extraction from videos..."
+echo "Starting transcription from files in $INPUT_DIR..."
 
-run_extraction() {
+run_transcription() {
+    echo "start"
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 
     # Initialize commands for each GPU
@@ -47,15 +48,12 @@ run_extraction() {
         gpu_commands[$i]=""
     done
 
-    local video_files=("$INPUT_DIR"/*.{mp4,MP4})
-    for ((i = 0; i < ${#video_files[@]}; i++)); do
+    local audio_files=($(find "$INPUT_DIR" -mindepth 2 -maxdepth 3 -type f -name "*vocals.mp3"))
+
+    for ((i = 0; i < ${#audio_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
-        local video="${video_files[$i]}"
-        base_name=$(basename "$video")
-        base_name="${base_name%.*}"
-            local output_dir="$OUTPUT_DIR/$base_name"
-        mkdir -p "$output_dir"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel cuda -i \"$video\" -vf scale=360:640 -qscale:v 1 -hide_banner -loglevel error -stats \"$output_dir/frame_%04d.jpg\";&"
+        local audio="${audio_files[$i]}"
+        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index whisper-ctranslate2 \"$audio\" --model large-v3 --model_dir /workspace/huggingface/ --model_directory /workspace/huggingface/models--Systran--faster-whisper-large-v3/snapshots/edaa852ec7e145841d8ffdb056a99866b5f0a478 --output_dir \"$OUTPUT_DIR\" --output_format txt --device cuda --task transcribe --language zh --vad_filter True --hf_token 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 --speaker_name SPEAKER;&"
     done
 
     # Group the commands for each GPU
@@ -87,6 +85,6 @@ run_extraction() {
     wait
 }
 
-run_extraction
+run_transcription
 
-echo "All frames have been extracted and stored in $OUTPUT_DIR."
+echo "All audio files have been transcribed and stored in $OUTPUT_DIR."

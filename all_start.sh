@@ -12,8 +12,8 @@ track_time() {
   shift
   "$cmd" "$@"
   local end_time=$(date +%s)
-  local elapsed_time=$((end_time - start_time))
-  execution_times+=("$cmd: ${elapsed_time} seconds")
+   elapsed_time=$((end_time - start_time))
+   echo $elapsed_time
 }
 
 # Function to track GPU memory usage and utilization
@@ -35,11 +35,18 @@ GPU_TRACK_PID=$!
 chmod +x /workspace/AI_code/*
 mkdir -p /workspace/results
 
-./separate_audio.sh -i /workspace/demucs/inputs -o /workspace/results -p 2
+source /workspace/env/demucs_env/bin/activate
+track_time /workspace/AI_code/separate_audio.sh -i /workspace/inputs -o /workspace/results -p 4
+
+source /workspace/env/whisper_env/bin/activate
+track_time /workspace/AI_code/whisper_batch.sh -i /workspace/results/separated_audio/htdemucs -o /workspace/results/transcribed -p 4
+
+source /workspace/env/llama_env/bin/activate
+track_time /workspace/AI_code/llama_batch.sh -i /workspace/results/transcribed -o /workspace/results/translated -p 1
 
 source /workspace/env/facefusion_env/bin/activate
 cd /workspace/facefusion
-track_time /workspace/AI_code/facefusion_batch.sh -f /workspace/facefusion/face_food_eating.webp -i /workspace/facefusion/inputs -o /workspace/results/swapped -p 2
+track_time /workspace/AI_code/facefusion_batch.sh -f /workspace/facefusion/face_food_eating.webp -i /workspace/inputs -o /workspace/results/swapped -p 2
 track_time /workspace/AI_code/extract_frames.sh -i /workspace/results/swapped -o /workspace/results/frames -p 2
 deactivate
 

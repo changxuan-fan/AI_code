@@ -32,6 +32,24 @@ fi
 mkdir -p "$parent_output_dir"
 mkdir -p "$detected_text_dir"
 
+# Ensure output directory exists and is empty
+if [ -d "$parent_output_dir" ]; then
+    find "$parent_output_dir" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $parent_output_dir"
+else
+    mkdir -p "$parent_output_dir"  # Create the directory if it doesn't exist
+    echo "Created directory $parent_output_dir"
+fi
+
+# Ensure output directory exists and is empty
+if [ -d "$detected_text_dir" ]; then
+    find "$detected_text_dir" -mindepth 1 -print -delete  # Log what gets deleted
+    echo "Cleared all contents of $detected_text_dir"
+else
+    mkdir -p "$detected_text_dir"  # Create the directory if it doesn't exist
+    echo "Created directory $detected_text_dir"
+fi
+
 echo "PaddleOCR Processing..."
 
 run_processing() {
