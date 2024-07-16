@@ -9,7 +9,6 @@ git clone https://github.com/changxuan-fan/Real-ESRGAN.git
 git clone https://github.com/changxuan-fan/PaddleOCR
 git clone https://github.com/changxuan-fan/demucs
 git clone https://github.com/changxuan-fan/whisper-ctranslate2
-# git clone https://github.com/meta-llama/llama3.git
 
 # Update package lists and install APT packages
 apt-get update -y
@@ -102,16 +101,6 @@ setup_whisper() {
   cd /workspace
 }
 
-# # Function to set up PaddleOCR environment
-# setup_llama() {
-#   source /workspace/env/llama_env/bin/activate
-#   cd /workspace/llama3
-#   pip install --upgrade pip
-#   pip install -e .
-#   deactivate
-#   cd /workspace
-# }
-
 # Function to set up PaddleOCR environment
 setup_qwen() {
   source /workspace/env/qwen_env/bin/activate
@@ -127,7 +116,6 @@ setup_esrgan &
 setup_paddleocr & 
 setup_demucs &
 setup_whisper &
-# setup_llama &
 setup_qwen &
 
 wait

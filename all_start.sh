@@ -41,9 +41,6 @@ track_time /workspace/AI_code/demucs_batch.sh -i /workspace/inputs -o /workspace
 source /workspace/env/whisper_env/bin/activate
 track_time /workspace/AI_code/whisper_batch.sh -i /workspace/results/htdemucs -o /workspace/results/transcribed -p 8
 
-# source /workspace/env/llama_env/bin/activate
-# track_time /workspace/AI_code/llama_batch.sh -i /workspace/results/transcribed -o /workspace/results/translated -p 10
-
 source /workspace/env/qwen_env/bin/activate
 track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/transcribed -p 4
 
