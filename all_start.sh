@@ -38,11 +38,11 @@ mkdir -p /workspace/results
 source /workspace/env/demucs_env/bin/activate
 track_time /workspace/AI_code/demucs_batch.sh -i /workspace/inputs -o /workspace/results -p 8
 
-source /workspace/env/whisper_env/bin/activate
-track_time /workspace/AI_code/whisper_batch.sh -i /workspace/results/htdemucs -o /workspace/results/transcribed -p 8
+# source /workspace/env/whisper_env/bin/activate
+# track_time /workspace/AI_code/whisper_batch.sh -i /workspace/results/htdemucs -o /workspace/results/transcribed -p 8
 
-source /workspace/env/qwen_env/bin/activate
-track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/transcribed -p 4
+# source /workspace/env/qwen_env/bin/activate
+# track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/transcribed -p 4
 
 source /workspace/env/facefusion_env/bin/activate
 cd /workspace/facefusion
@@ -56,6 +56,10 @@ track_time /workspace/AI_code/paddle_batch.sh -i /workspace/results/frames -o /w
 track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames --files-per-dir 600 --process-num 2
 track_time /workspace/AI_code/split_dir.sh --parent-dir /workspace/results/frames-mask --files-per-dir 600 --process-num 2
 deactivate
+
+# Translate text in detected_text for videos without vocal
+source /workspace/env/qwen_env/bin/activate
+track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/detected_text -p 4
 
 source /workspace/env/propainter_env/bin/activate
 cd /workspace/ProPainter
