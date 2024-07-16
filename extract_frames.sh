@@ -51,12 +51,25 @@ run_extraction() {
     for ((i = 0; i < ${#video_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local video="${video_files[$i]}"
-        base_name=$(basename "$video")
+        local base_name=$(basename "$video")
         base_name="${base_name%.*}"
-            local output_dir="$OUTPUT_DIR/$base_name"
+        local output_dir="$OUTPUT_DIR/$base_name"
+        
         mkdir -p "$output_dir"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel cuda -i \"$video\" -vf scale=360:640 -qscale:v 1 -hide_banner -loglevel error -stats \"$output_dir/frame_%04d.jpg\";&"
+        
+        local command="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y \
+        -vsync 0 \
+        -hwaccel cuda \
+        -i \"$video\" \
+        -vf scale=360:640 \
+        -qscale:v 1 \
+        -hide_banner \
+        -loglevel error \
+        -stats \"$output_dir/frame_%04d.jpg\";&"
+
+        gpu_commands[$gpu_index]+="$command"
     done
+
 
     # Group the commands for each GPU
     declare -A group_gpu_commands

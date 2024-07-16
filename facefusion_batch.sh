@@ -56,8 +56,18 @@ run_processing() {
         local video="${video_files[$i]}"
         local video_filename=$(basename "$video")
         local output_video="$OUTPUT_DIR/$video_filename"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python run.py -t \"$video\" -s \"$FACE_IMG\" -o \"$output_video\" --face-mask-types region --face-mask-blur 0.8 --face-mask-regions skin;&"
+        
+        local command="CUDA_VISIBLE_DEVICES=$gpu_index python run.py \
+        -t \"$video\" \
+        -s \"$FACE_IMG\" \
+        -o \"$output_video\" \
+        --face-mask-types region \
+        --face-mask-blur 0.8 \
+        --face-mask-regions skin;&"
+        
+        gpu_commands[$gpu_index]+="$command"
     done
+
 
     # Group the commands for each GPU
     # group_gpu_commands look like this:

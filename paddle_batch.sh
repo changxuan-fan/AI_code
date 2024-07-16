@@ -72,7 +72,10 @@ run_processing() {
             echo "Processing child folder: $child_input_dir"
 
             local gpu_index=$((child_folder_index % NUM_GPUS))
-            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index python /workspace/AI_code/process_images.py \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\";&"
+            local command="CUDA_VISIBLE_DEVICES=$gpu_index python /workspace/AI_code/process_images.py \
+            \"$child_input_dir\" \"$child_output_dir\" \"$child_text_file\";&"
+            
+            gpu_commands[$gpu_index]+="$command"
             child_folder_index=$((child_folder_index + 1))
         fi
     done

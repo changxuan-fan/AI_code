@@ -9,6 +9,7 @@ git clone https://github.com/changxuan-fan/Real-ESRGAN.git
 git clone https://github.com/changxuan-fan/PaddleOCR
 git clone https://github.com/changxuan-fan/demucs
 git clone https://github.com/changxuan-fan/whisper-ctranslate2
+# git clone https://github.com/meta-llama/llama3.git
 
 # Update package lists and install APT packages
 apt-get update -y
@@ -21,7 +22,9 @@ python3 -m venv /workspace/env/esrgan_env
 python3 -m venv /workspace/env/paddle_env
 python3 -m venv /workspace/env/demucs_env
 python3 -m venv /workspace/env/whisper_env
-python3 -m venv /workspace/env/llama_env
+# python3 -m venv /workspace/env/llama_env
+python3 -m venv /workspace/env/qwen_env
+
 
 # Function to set up FaceFusion environment
 setup_facefusion() {
@@ -92,30 +95,40 @@ setup_demucs() {
 setup_whisper() {
   source /workspace/env/whisper_env/bin/activate
   pip install --upgrade pip
-  pip install -U demucs
+  pip install -U whisper-ctranslate2
+  pip install torchvision
   pip install pyannote.audio
   deactivate
   cd /workspace
 }
 
+# # Function to set up PaddleOCR environment
+# setup_llama() {
+#   source /workspace/env/llama_env/bin/activate
+#   cd /workspace/llama3
+#   pip install --upgrade pip
+#   pip install -e .
+#   deactivate
+#   cd /workspace
+# }
+
 # Function to set up PaddleOCR environment
-setup_llama() {
-  source /workspace/env/llama_env/bin/activate
-  cd /workspace/llama3
-  pip install --upgrade pip
-  pip install -e .
+setup_qwen() {
+  source /workspace/env/qwen_env/bin/activate
+  pip install vLLM>=0.4.0
   deactivate
   cd /workspace
 }
-
 
 # Run all setups sequentially
 setup_facefusion &
 setup_propainter &
 setup_esrgan &
-setup_paddleocr &
+setup_paddleocr & 
 setup_demucs &
-setup_llama
+setup_whisper &
+# setup_llama &
+setup_qwen &
 
 wait
 

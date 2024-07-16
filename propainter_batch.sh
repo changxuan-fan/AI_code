@@ -73,7 +73,13 @@ run_inference() {
 
             if [ -d "$mask_sub_dir" ]; then
                 local gpu_index=$((subdir_index % NUM_GPUS))
-                gpu_commands[$gpu_index]+="mkdir -p \"$OUTPUT_DIR/$video_name\"; CUDA_VISIBLE_DEVICES=$gpu_index python inference_propainter.py --video \"$sub_dir\" --mask \"$mask_sub_dir\" --output \"$OUTPUT_DIR/$video_name\" --subvideo_length 100 --save_fps 30;&"
+                gpu_commands[$gpu_index]+="mkdir -p \"$OUTPUT_DIR/$video_name\"; \
+                CUDA_VISIBLE_DEVICES=$gpu_index python inference_propainter.py \
+                --video \"$sub_dir\" \
+                --mask \"$mask_sub_dir\" \
+                --output \"$OUTPUT_DIR/$video_name\" \
+                --subvideo_length 100 \
+                --save_fps 30;&"
                 subdir_index=$((subdir_index + 1))
             else
                 echo "Mask directory $mask_sub_dir does not exist."

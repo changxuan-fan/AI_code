@@ -49,12 +49,24 @@ run_transcription() {
     done
 
     local audio_files=($(find "$INPUT_DIR" -mindepth 2 -maxdepth 3 -type f -name "*vocals.mp3"))
-
     for ((i = 0; i < ${#audio_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local audio="${audio_files[$i]}"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index whisper-ctranslate2 \"$audio\" --model large-v3 --model_dir /workspace/huggingface/ --model_directory /workspace/huggingface/models--Systran--faster-whisper-large-v3/snapshots/edaa852ec7e145841d8ffdb056a99866b5f0a478 --output_dir \"$OUTPUT_DIR\" --output_format txt --device cuda --task transcribe --language zh --vad_filter True --hf_token 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 --speaker_name SPEAKER;&"
+        local command="CUDA_VISIBLE_DEVICES=$gpu_index whisper-ctranslate2 \"$audio\" --model large-v3 \
+        --model_dir /workspace/huggingface/ \
+        --model_directory /workspace/huggingface/models--Systran--faster-whisper-large-v3/snapshots/edaa852ec7e145841d8ffdb056a99866b5f0a478 \
+        --output_dir \"$OUTPUT_DIR\" \
+        --output_format txt \
+        --device cuda \
+        --task transcribe \
+        --language zh \
+        --vad_filter True \
+        --hf_token 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 \
+        --speaker_name SPEAKER;&"
+        
+        gpu_commands[$gpu_index]+="$command"
     done
+
 
     # Group the commands for each GPU
     declare -A group_gpu_commands

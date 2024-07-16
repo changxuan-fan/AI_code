@@ -53,13 +53,27 @@ run_processing() {
     for SUBDIR in "$INPUT_DIR"/*; do
         if [ -d "$SUBDIR" ]; then
             > "$TEMP_FILE"  # Clear the temporary file list
+
             # List all video files in the subdirectory
             for VIDEO_FILE in "$SUBDIR"/*; do
                 echo "file '$VIDEO_FILE'" >> "$TEMP_FILE"
             done
+
             local SUBDIR_NAME=$(basename "$SUBDIR")
             local gpu_index=$((subdir_index % NUM_GPUS))
-            gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y -vsync 0 -hwaccel nvdec -f concat -safe 0 -i \"$TEMP_FILE\" -hide_banner -loglevel error -stats \"$OUTPUT_DIR/$SUBDIR_NAME.mp4\";&"
+            
+            local command="CUDA_VISIBLE_DEVICES=$gpu_index ffmpeg -y \
+            -vsync 0 \
+            -hwaccel nvdec \
+            -f concat \
+            -safe 0 \
+            -i \"$TEMP_FILE\" \
+            -hide_banner \
+            -loglevel error \
+            -stats \"$OUTPUT_DIR/$SUBDIR_NAME.mp4\";&"
+
+            gpu_commands[$gpu_index]+="$command"
+            
             subdir_index=$((subdir_index + 1))
         fi
     done

@@ -2,7 +2,7 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -i <INPUT_DIR> -o <OUTPUT_DIR> -p <GPU_PROCESS_NUM>"
+    echo "Usage: $0 -i <INPUT_DIR> -o <OUTPUT_DIR> -p <Maximum_Batch_Size>"
     exit 1
 }
 
@@ -11,20 +11,14 @@ while getopts ":i:o:p:" opt; do
     case $opt in
         i) INPUT_DIR="$OPTARG" ;;
         o) OUTPUT_DIR="$OPTARG" ;;
-        p) GPU_PROCESS_NUM="$OPTARG" ;;
+        p) max_batch_size="$OPTARG" ;;
         *) usage ;;
     esac
 done
 
 # Check if all required options are provided
-if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$GPU_PROCESS_NUM" ]; then
+if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$max_batch_size" ]; then
     usage
-fi
-
-# Ensure GPU_PROCESS_NUM is a number and greater than 0
-if ! [[ "$GPU_PROCESS_NUM" =~ ^[0-9]+$ ]] || [ "$GPU_PROCESS_NUM" -le 0 ]; then
-    echo "Error: The number of commands per GPU must be a positive number."
-    exit 1
 fi
 
 # Ensure output directory exists and is empty
@@ -47,42 +41,22 @@ run_translation() {
         gpu_commands[$i]=""
     done
 
-    local txt_files=("$INPUT_DIR"/*.txt)
-    for ((i = 0; i < ${#txt_files[@]}; i++)); do
-        local gpu_index=$((i % NUM_GPUS))
-        local file="${txt_files[$i]}"
-        echo "Start processing file $file"
-        gpu_commands[$gpu_index]+="CUDA_VISIBLE_DEVICES=$gpu_index torchrun --nproc_per_node 1 translate_file.py \
-            --input_file \"$file\" \
+    for ((i = 0; i < 1; i++)); do
+        echo "Start processing files for GPU $i"
+        gpu_commands[$i]="CUDA_VISIBLE_DEVICES=$i torchrun --nproc_per_node 1 /workspace/AI_code/translate_file.py \
+            --input_dir \"$INPUT_DIR\" \
             --output_dir \"$OUTPUT_DIR\" \
-            --ckpt_dir Meta-Llama-3-8B-Instruct/ \
-            --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
-            --max_seq_len 2048 --max_batch_size 1;&"
+            --ckpt_dir /workspace/llama3/Meta-Llama-3-8B-Instruct/ \
+            --tokenizer_path /workspace/llama3/Meta-Llama-3-8B-Instruct/tokenizer.model \
+            --gpu_count $NUM_GPUS --gpu_index $i \
+            --max_seq_len 2048 --max_batch_size $max_batch_size;"
     done
 
-    # Group the commands for each GPU
-    declare -A group_gpu_commands
+    # Execute the commands for each GPU in parallel
     for ((i = 0; i < NUM_GPUS; i++)); do
-        IFS='&' read -ra commands_array <<< "${gpu_commands[$i]}"
-        local total_commands=$(echo "${gpu_commands[$i]}" | tr -cd '&' | wc -c)
-        local num_commands_per_group=$(( (total_commands + GPU_PROCESS_NUM - 1) / GPU_PROCESS_NUM ))
-        group_gpu_commands[$i]=""
-        for ((j = 0; j < ${#commands_array[@]}; j += num_commands_per_group)); do
-            group_gpu_commands[$i]+="${commands_array[@]:j:num_commands_per_group} &"
-        done
-    done
-
-    # Execute the grouped commands in the desired order
-    for ((i = 0; i < GPU_PROCESS_NUM; i++)); do
-        for ((j = 0; j < NUM_GPUS; j++)); do
-            if [ -n "${group_gpu_commands[$j]}" ]; then
-                IFS='&' read -ra commands <<< "${group_gpu_commands[$j]}"
-                if [ -n "${commands[$i]}" ]; then
-                    eval "(${commands[$i]}) &"
-                    sleep 1
-                fi
-            fi
-        done
+        if [ -n "${gpu_commands[$i]}" ]; then
+            eval "(${gpu_commands[$i]}) &"
+        fi
     done
 
     # Wait for all background processes to exit
