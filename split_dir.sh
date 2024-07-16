@@ -82,13 +82,36 @@ process_parent_dir() {
 # Main script execution
 main() {
     echo "Starting Splitting Directories..."
-    # Parse arguments using getopts
-    while getopts ":--parent-dir:--files-per-dir:--process-num:" opt; do
-        case $opt in
-            --parent-dir) parent_dir="$OPTARG" ;;
-            --files-per-dir) files_per_dir="$OPTARG" ;;
-            --process-num) process_num="$OPTARG" ;;
-            *) echo "Unknown parameter passed: $opt"; usage ;;
+
+    # Parse arguments using getopt
+    PARAMS=$(getopt -o '' --long parent-dir:,files-per-dir:,process-num: -- "$@")
+    if [ $? -ne 0 ]; then
+        usage
+    fi
+
+    eval set -- "$PARAMS"
+
+    while true; do
+        case "$1" in
+            --parent-dir)
+                parent_dir="$2"
+                shift 2
+                ;;
+            --files-per-dir)
+                files_per_dir="$2"
+                shift 2
+                ;;
+            --process-num)
+                process_num="$2"
+                shift 2
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                usage
+                ;;
         esac
     done
 

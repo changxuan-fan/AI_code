@@ -2,16 +2,16 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 --input-dir <INPUT_DIR> --output-dir <OUTPUT_DIR> --process-num <process_num>"
+    echo "Usage: $0 -i <INPUT_DIR> -o <OUTPUT_DIR> -p <process_num>"
     exit 1
 }
 
 # Parse command line options using getopts
-while getopts ":--input-dir:--output-dir:--process-num:" opt; do
+while getopts ":i:o:p:" opt; do
     case $opt in
-        --input-dir) INPUT_DIR="$OPTARG" ;;
-        --output-dir) OUTPUT_DIR="$OPTARG" ;;
-        --process-num) process_num="$OPTARG" ;;
+        i) INPUT_DIR="$OPTARG" ;;
+        o) OUTPUT_DIR="$OPTARG" ;;
+        p) process_num="$OPTARG" ;;
         *) echo "Unknown parameter passed: $opt"; usage ;;
     esac
 done
@@ -76,7 +76,7 @@ process_input_dir() {
     # Execute the commands in parallel
     for ((i = 0; i < process_num; i++)); do
         if [ -n "${process_commands[$i]}" ]; then
-            eval "$({process_commands[$i]}) &"
+            eval "(${process_commands[$i]}) &"
             sleep 1
         fi
     done

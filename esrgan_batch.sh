@@ -46,7 +46,7 @@ run_processing() {
     local NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 
     # Get the list of MP4 files in the input folder
-    local video_files=("$INPUT_DIR"/*.{mp4,MP4})
+    local video_files=("$INPUT_DIR"/*.mp4)
 
     # Initialize commands for each GPU
     declare -A gpu_commands

@@ -59,12 +59,12 @@ deactivate
 
 # Translate text in detected_text for videos without vocal
 source /workspace/env/qwen_env/bin/activate
-track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/detected_text -p 4
+track_time python /workspace/AI_code/qwen_batch.py -i /workspace/results/detected_text -p 4 --cuda 4
 
 source /workspace/env/propainter_env/bin/activate
 cd /workspace/ProPainter
 track_time /workspace/AI_code/propainter_batch.sh -v /workspace/results/frames -m /workspace/results/frames-mask -o /workspace/results/propainted -p 2
-track_time /workspace/AI_code/extract_propainter.sh -input-dir /workspace/results/propainted -output-dir /workspace/results/propaint_extracted --process-num 2
+track_time /workspace/AI_code/extract_propainter.sh -i /workspace/results/propainted -o /workspace/results/propaint_extracted -p 2
 track_time /workspace/AI_code/combine_videos.sh -i /workspace/results/propaint_extracted -o /workspace/results/propaint_combined -t /workspace/results/file_list.txt -p 2
 deactivate
 

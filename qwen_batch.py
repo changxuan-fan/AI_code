@@ -3,7 +3,7 @@ import argparse
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
-def main(input_folder, max_num_seqs):
+def main(input_folder, max_num_seqs, tensor_parallel_size):
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-7B-Instruct")
 
@@ -19,10 +19,9 @@ def main(input_folder, max_num_seqs):
     llm = LLM(
         model="Qwen/Qwen2-72B-Instruct-GPTQ-Int4",
         quantization="gptq",
-        tensor_parallel_size=4,
+        tensor_parallel_size=tensor_parallel_size,
         gpu_memory_utilization=1,
         max_num_seqs=max_num_seqs,
-        download_dir="/workspace/huggingface",
     )
     
     def prepare_messages(prompt):
@@ -92,6 +91,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate text from prompts in input files and append the output to the same files.')
     parser.add_argument('-i', '--input_folder', type=str, required=True, help='Path to the input folder containing prompt files.')
     parser.add_argument('-p', '--max_num_seqs', type=int, required=True, help='Maximum number of sequences to process.')
+    parser.add_argument('--cuda', type=int, required=True, help='Tensor parallel size for CUDA.')
 
     args = parser.parse_args()
-    main(args.input_folder, args.max_num_seqs)
+    main(args.input_folder, args.max_num_seqs, args.cuda)

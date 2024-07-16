@@ -21,7 +21,6 @@ python3 -m venv /workspace/env/esrgan_env
 python3 -m venv /workspace/env/paddle_env
 python3 -m venv /workspace/env/demucs_env
 python3 -m venv /workspace/env/whisper_env
-# python3 -m venv /workspace/env/llama_env
 python3 -m venv /workspace/env/qwen_env
 
 

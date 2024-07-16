@@ -50,7 +50,7 @@ run_processing() {
         gpu_commands[$i]=""
     done
 
-    local video_files=("$INPUT_DIR"/*.{mp4,MP4})
+    local audio_files=("$INPUT_DIR"/*.mp4 "$INPUT_DIR"/*.MP4)
     for ((i = 0; i < ${#video_files[@]}; i++)); do
         local gpu_index=$((i % NUM_GPUS))
         local video="${video_files[$i]}"

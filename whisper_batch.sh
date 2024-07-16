@@ -53,8 +53,6 @@ run_transcription() {
         local gpu_index=$((i % NUM_GPUS))
         local audio="${audio_files[$i]}"
         local command="CUDA_VISIBLE_DEVICES=$gpu_index whisper-ctranslate2 \"$audio\" --model large-v3 \
-        --model_dir /workspace/huggingface/ \
-        --model_directory /workspace/huggingface/models--Systran--faster-whisper-large-v3/snapshots/edaa852ec7e145841d8ffdb056a99866b5f0a478 \
         --output_dir \"$OUTPUT_DIR\" \
         --output_format txt \
         --device cuda \

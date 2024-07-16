@@ -78,7 +78,7 @@ run_inference() {
                 --video \"$sub_dir\" \
                 --mask \"$mask_sub_dir\" \
                 --output \"$OUTPUT_DIR/$video_name\" \
-                --subvideo_length 100 \
+                --subvideo_length 80 \
                 --save_fps 30;&"
                 subdir_index=$((subdir_index + 1))
             else
